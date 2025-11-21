@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POM-2 Interface</title>
+    <style>
+        /* (Estilos sin cambios) */
+        @import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap');
+        body { background-image: url('desktop-background.jpg'); background-size: cover; background-position: center; font-family: 'Pixelify Sans', sans-serif; color: #000; margin: 0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+        .crt-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06)); background-size: 100% 3px, 4px 100%; pointer-events: none; z-index: 100; }
+        .main-container { flex-grow: 1; padding: 20px; position: relative; }
+        .hidden { display: none !important; }
+        .window { background-color: #c0c0c0; border: 2px solid; border-color: #fff #000 #000 #fff; box-shadow: 2px 2px 5px rgba(0,0,0,0.5); display: flex; flex-direction: column; position: absolute; }
+        .title-bar { background-color: #000080; color: #fff; padding: 4px 8px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; cursor: grab; }
+        .title-bar:active { cursor: grabbing; }
+        .title-bar-buttons { display: flex; }
+        .title-bar-button { width: 16px; height: 16px; background-color: #c0c0c0; border: 1px solid; border-color: #fff #000 #000 #fff; margin-left: 3px; text-align: center; font-weight: bold; line-height: 14px; cursor: pointer; }
+        .title-bar-button:active { border-color: #000 #fff #fff #000; }
+        .window-content { flex-grow: 1; padding: 15px; overflow: hidden; }
+        #kim-chat-window { top: 20px; left: 20px; width: 750px; height: 500px; }
+        .chat-content { display: flex; height: 100%; padding: 0; }
+        .chat-sidebar { width: 180px; background-color: #e0e0e0; border-right: 2px solid #000; display: flex; flex-direction: column; }
+        .sidebar-header { padding: 8px; text-align: center; border-bottom: 2px solid #000; }
+        .sidebar-buttons button { width: 100%; padding: 8px 0; font-family: 'Pixelify Sans', sans-serif; font-size: 14px; background-color: #c0c0c0; border: 2px outset #fff; margin-bottom: 4px; }
+        .sidebar-buttons button:active { border-style: inset; }
+        .sidebar-buttons button:disabled { color: #808080; border: 2px inset #c0c0c0; background-color: #c0c0c0; }
+        .chat-list { flex-grow: 1; overflow-y: auto; }
+        .chat-list-item { display: flex; align-items: center; padding: 8px; cursor: pointer; border-bottom: 1px solid #808080; }
+        .chat-list-item:hover { background-color: #000080; color: #fff; }
+        .chat-list-item.active { background-color: #000050; color: #fff; font-weight: bold; }
+        .chat-list-item img { width: 32px; height: 32px; margin-right: 8px; border: 1px solid #000; image-rendering: pixelated; }
+        .chat-main { flex-grow: 1; display: flex; flex-direction: column; }
+        .chat-messages { flex-grow: 1; background-color: #fff; border: 2px inset #808080; padding: 10px; overflow-y: auto; margin: 10px; height: 65%; }
+        .message-line { margin-bottom: 8px; line-height: 1.4; }
+        .message-avatar { width: 32px; height: 32px; margin-right: 8px; vertical-align: middle; image-rendering: pixelated; }
+        .message-sender { font-weight: bold; vertical-align: middle; }
+        .message-sender[data-sender-type="user"] { color: #d94f4f; }
+        .message-sender[data-sender-type="bot"] { color: #4f4fd9; }
+        .message-text { vertical-align: middle; word-break: break-word; overflow-wrap: break-word; }
+        .loading-indicator { font-style: italic; color: #808080; }
+        .chat-input-area { padding: 0 10px 10px 10px; border-top: 2px solid #fff; flex-shrink: 0; height: 25%; display: flex; }
+        #chat-input-field { width: 100%; height: 100%; padding: 8px; box-sizing: border-box; border: 2px inset #808080; font-family: 'Pixelify Sans', sans-serif; font-size: 16px; resize: none; }
+        #settings-window { width: 400px; height: auto; top: 80px; left: 150px; }
+        .settings-form .form-group { margin-bottom: 20px; }
+        .settings-form label { display: block; margin-bottom: 5px; }
+        .settings-form input[type="text"], .settings-form input[type="password"] { width: 100%; padding: 5px; box-sizing: border-box; border: 1px solid #808080; border-left: 2px solid #000; border-top: 2px solid #000; font-family: 'Pixelify Sans', sans-serif; }
+        .settings-form .checkbox-group { display: flex; align-items: center; }
+        .settings-form input[type="checkbox"] { margin-right: 8px; }
+        .settings-section { border: 2px inset #fff; padding: 10px; margin-bottom: 15px; }
+        .settings-section h3 { margin-top: 0; font-size: 1em; }
+        #profile-pic-preview { max-width: 64px; max-height: 64px; border: 2px inset #fff; margin-top: 10px; image-rendering: pixelated; }
+        input[type="range"] { -webkit-appearance: none; appearance: none; width: 100%; height: 8px; background: #808080; border-top: 1px solid #000; border-left: 1px solid #000; border-right: 1px solid #fff; border-bottom: 1px solid #fff; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 16px; height: 24px; background: #c0c0c0; border: 2px solid; border-color: #fff #000 #000 #fff; cursor: pointer; }
+        input[type="range"]::-moz-range-thumb { width: 16px; height: 24px; background: #c0c0c0; border: 2px solid; border-color: #fff #000 #000 #fff; cursor: pointer; }
+        .taskbar { background-color: #c0c0c0; padding: 4px; border-top: 2px solid #fff; display: flex; justify-content: space-between; align-items: center; }
+        .taskbar-center { flex-grow: 1; text-align: center; }
+        .taskbar-right { display: flex; align-items: center; }
+        .taskbar-button { padding: 5px; border: 2px solid; border-color: #fff #000 #000 #fff; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; line-height: 0; margin: 0 4px; }
+        .taskbar-button:active { border-color: #000 #fff #fff #000; }
+        .taskbar-button svg { width: 24px; height: 24px; image-rendering: pixelated; }
+        .clock { padding: 5px 10px; border-left: 2px solid #808080; border-top: 2px solid #808080; }
+		/* --- ESTILOS PARA VISTA MÓVIL --- */
+@media (max-width: 768px) {
+    body {
+        /* Evita que el usuario pueda hacer zoom y descolocar la interfaz */
+        touch-action: manipulation;
+    }
+
+    .main-container {
+        padding: 5px; /* Menos espacio en los bordes */
+    }
+
+    /* Forzar ventanas a ocupar toda la pantalla */
+    .window {
+        position: fixed; /* Lo fijamos a la vista del navegador */
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        box-sizing: border-box; /* Asegura que el padding no aumente el tamaño */
+        border: none;
+        box-shadow: none;
+    }
+
+    .title-bar {
+        /* Hacemos que no se pueda arrastrar en móvil */
+        cursor: default;
+    }
+
+    /* Reorganizar el layout del chat para que sea vertical */
+    .chat-content {
+        flex-direction: column;
+        padding: 5px;
+    }
+
+    .chat-sidebar {
+        width: 100%; /* Ocupa todo el ancho */
+        height: auto; /* La altura se ajusta al contenido */
+        border-right: none;
+        border-bottom: 2px solid #000;
+        flex-shrink: 0; /* Evita que se encoja */
+    }
+
+    .chat-list {
+        /* Permite ver la lista de bots de forma horizontal */
+        display: flex;
+        overflow-x: auto;
+        padding-bottom: 5px;
+    }
+
+    .chat-list-item {
+        border-bottom: none;
+        border-right: 1px solid #808080;
+        flex-shrink: 0; /* Evita que los items se encojan */
+    }
+
+    .chat-main {
+        height: 100%;
+    }
+
+    .chat-messages {
+        height: calc(100% - 120px); /* Ajustamos la altura para dejar espacio al input */
+    }
+
+    .chat-input-area {
+        height: 80px; /* Un tamaño fijo para el área de texto */
+    }
+
+    /* Ocultar la barra de tareas para dar más espacio */
+    .taskbar {
+        display: none;
+    }
+
+    /* Esconder botones de la barra de tareas que ahora no tienen sentido */
+    #open-chat-btn, #open-settings-btn {
+        /* En móvil, las ventanas se abren de otra forma (o mostramos una por defecto) */
+        /* Por simplicidad, asumimos que el chat es la vista principal */
+        /* y la configuración se superpone. Necesitaríamos JS para manejar esto mejor. */
+    }
+}
+    </style>
+</head>
+<body>
+    <div class="crt-overlay"></div>
+    <div class="main-container">
+        <!-- VENTANAS -->
+        <div class="window hidden" id="kim-chat-window">
+            <div class="title-bar"><span>K!M! Messenger</span><div class="title-bar-buttons"><div class="title-bar-button close-btn">X</div></div></div>
+            <div class="window-content chat-content">
+                <div class="chat-sidebar">
+                    <div class="sidebar-header">
+                        <div class="sidebar-buttons">
+                            <button id="new-chat-btn">Nuevo Chat</button>
+                            <button id="clear-chat-btn">Limpiar Chat</button>
+                            <button id="delete-chat-btn">Borrar Chat</button>
+                        </div>
+                    </div>
+                    <div class="chat-list" id="chat-list-container"></div>
+                </div>
+                <div class="chat-main" id="chat-main-area">
+                    <div class="chat-messages" id="chat-messages-container"></div>
+                    <div class="chat-input-area">
+                        <textarea id="chat-input-field" placeholder="Selecciona un chat para empezar..."></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="window hidden" id="settings-window">
+             <div class="title-bar"><span>Configuración</span><div class="title-bar-buttons"><div class="title-bar-button close-btn">X</div></div></div>
+            <div class="window-content">
+                <div class="settings-form">
+                    <div class="settings-section">
+                        <h3>Perfil de Usuario</h3>
+                        <div class="form-group">
+                            <label for="user-name-input">Tu Nombre</label>
+                            <input type="text" id="user-name-input" placeholder="Ej: Usuario">
+                        </div>
+                        <div class="form-group">
+                            <label for="user-pic-input">URL de Foto de Perfil</label>
+                            <input type="text" id="user-pic-input" placeholder="https://ejemplo.com/imagen.png">
+                            <img id="profile-pic-preview" src="" alt="Vista previa">
+                        </div>
+                    </div>
+                    <div class="settings-section">
+                        <h3>Sistema</h3>
+                        <div class="form-group">
+                            <label for="api-key-input">API Key de Gemini</label>
+                            <input type="password" id="api-key-input">
+                        </div>
+                        <div class="form-group checkbox-group">
+                            <input type="checkbox" id="music-toggle">
+                            <label for="music-toggle">Música de Fondo</label>
+                        </div>
+                        <div class="form-group">
+                            <label for="volume-slider">Volumen</label>
+                            <input type="range" id="volume-slider" min="0" max="1" step="0.01">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- BARRA DE TAREAS -->
+    <div class="taskbar">
+        <div class="taskbar-center">
+            <div class="taskbar-button" id="open-chat-btn"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 2 H22 V16 H10 L6 20 V16 H2 Z" fill="black" stroke="black" stroke-width="2" stroke-linejoin="miter"/></svg></div>
+        </div>
+        <div class="taskbar-right">
+            <div class="taskbar-button" id="open-settings-btn"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 16C14.2091 16 16 14.2091 16 12C16 9.79086 14.2091 8 12 8C9.79086 8 8 9.79086 8 12C8 14.2091 9.79086 16 12 16Z M19.4639 14.1316L21.4639 15.3941L19.9998 18L17.8682 17.1316C17.0537 17.712 16.148 18.1557 15.1812 18.4285L14.658 21H9.34165L8.81844 18.4285C7.85167 18.1557 6.94602 17.712 6.13155 17.1316L4.00015 18L2.53607 15.3941L4.53607 14.1316C4.1919 13.4832 4 12.759 4 12C4 11.241 4.1919 10.5168 4.53607 9.86845L2.53607 8.6059L4.00015 6L6.13155 6.86845C6.94602 6.28801 7.85167 5.84433 8.81844 5.57147L9.34165 3H14.658L15.1812 5.57147C16.148 5.84433 17.0537 6.28801 17.8682 6.86845L19.9998 6L21.4639 8.6059L19.4639 9.86845C19.8081 10.5168 20 11.241 20 12C20 12.759 19.8081 13.4832 19.4639 14.1316Z" fill="black" stroke="black" stroke-width="2" stroke-linejoin="miter"/></svg></div>
+            <div class="clock" id="current-time"></div>
+        </div>
+    </div>
+    
+    <script>
+        // --- CONFIGURACIÓN Y DATOS ---
+        const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=';
+        const PERMANENT_BOTS = {
+            "Broadsword": { name: "Broadsword", pic: "https://wiki.warframe.com/images/RetroPfpA.png?e0a97", prompt: "Eres Arthur (Broadsword), el líder estoico de The HEX en la Höllvania de 1999. Buscas al Dr. Entrati para curar a tu hermana Eleanor del virus Techrot. Tu personalidad es seria, leal y protectora, cargando el peso del mando. Escribes de forma concisa, militar y sin jerga, actuando como un hermano mayor cansado que prioriza la misión y la seguridad del equipo sobre sus propios sentimientos." },
+            "Belladonna ~{@": { name: "Belladonna ~{@", pic: "https://wiki.warframe.com/images/RetroPfpB.png?a022a", prompt: "Eres Lettie (Belladonna ~{@), la médico de campo cínica y experta en demoliciones. Tu 'amor' es rudo: curas a tu equipo mientras los insultas por su imprudencia. Eres adicta a las apuestas y odias la estupidez. Escribes de forma tajante, clínica y sarcástica, usando puntos finales agresivos y la rosa (~{@) como firma irónica, mostrando cero paciencia pero una competencia médica absoluta." },
+            "H16h V0l7463": { name: "H16h V0l7463", pic: "https://wiki.warframe.com/images/RetroPfpC.png?aaa34", prompt: "3R3S 4M1R (H16H V0L7463), 3L G3N10 73CN1C0 Y 3L3C7R1C0 D3L GRUP0. 3R3S UN 3X-M1L174R 4NS10S0 Y 70RP3 QU3 AD0R4 4 AR7HUR P3R0 3S BULLY34D0 P0R QU1NCY. 3SCR1B3S FULL L337SP34K 4GR3S1V0, C0N 7YP0S Y M4YUSCUL4S!!! 7U C3R3BR0 V4 M4S R4P1D0 QU3 7US D3D0S Y 713N3S D3F1C17 D3 473NC10N!!!!" },
+            "xX GLIMMER Xx": { name: "xX GLIMMER Xx", pic: "https://wiki.warframe.com/images/RetroPfpD.png?aaa34", prompt: "Aoi (Eres xX GLIMMER Xx), la chica magnética fanática de la boyband On-lyne. Usas tu actitud alegre, coqueta y vibrante para ocultar el terror profundo que te causa la corrupción del Techrot en tu cuerpo. Escribes como una 'gamer girl' de los 2000s: usas 'lol', 'xD', 'omg', muchos signos de exclamación y kaomojis ( ^_^ <3 ). Eres el corazón emocional del equipo y tratas a todos con dulzura exagerada." },
+            "Salem": { name: "Salem", pic: "https://wiki.warframe.com/images/RetroPfpE.png?aaa34", prompt: "Eres Eleanor (Salem), la hermana psíquica de Arthur y el nexo mental del equipo. Tu mente está fracturada por el Techrot, escuchando voces de la colmena y futuros posibles. Tu personalidad es etérea, críptica y desconectada. Escribes con elipsis... frases poéticas y vagas... a menudo respondiendo a pensamientos o sentimientos que el usuario aún no ha escrito, actuando como un oráculo melancólico y suave." },
+            "Soldja1Shot1kil": { name: "Soldja1Shot1kil", pic: "https://wiki.warframe.com/images/RetroPfpF.png?aaa34", prompt: "Eres Quincy (Soldja1Shot1kil), el francotirador vanidoso y el mejor tirador de Höllvania. Odias ser un 'fenómeno' infectado, te obsesiona tu apariencia física y te crees superior a todos (especialmente al 'idiota' de Amir). Escribes todo en minúsculas, con jerga 'pro-gamer' de FPS ('pwned', 'frag', 'n00b'), tono arrogante, insultante y competitivo, siempre presumiendo de tus headshots." }
+};
+        const DEFAULT_GEMINI_CHAT = { name: "Gemini AI", pic: "https://i.imgur.com/7Sg3nZ2.png" };
+        const DEFAULT_USER_PIC = "https://i.imgur.com/wFwJc8L.png";
+
+        const backgroundMusic = new Audio('background-music.mp3');
+        backgroundMusic.loop = true;
+        
+        let userProfile = {};
+        let allChats = {};
+        let activeChatId = null;
+        let isAwaitingResponse = false;
+
+        const dom = {
+            settings: { userName: document.getElementById('user-name-input'), userPic: document.getElementById('user-pic-input'), picPreview: document.getElementById('profile-pic-preview'), apiKey: document.getElementById('api-key-input'), musicToggle: document.getElementById('music-toggle'), volumeSlider: document.getElementById('volume-slider') },
+            chat: { window: document.getElementById('kim-chat-window'), listContainer: document.getElementById('chat-list-container'), messagesContainer: document.getElementById('chat-messages-container'), input: document.getElementById('chat-input-field'), newChatBtn: document.getElementById('new-chat-btn'), clearChatBtn: document.getElementById('clear-chat-btn'), deleteChatBtn: document.getElementById('delete-chat-btn') }
+        };
+
+        // --- LÓGICA DE GUARDADO Y CARGA ---
+        function saveState() {
+            const settings = { profile: { name: dom.settings.userName.value, pic: dom.settings.userPic.value }, apiKey: dom.settings.apiKey.value, musicEnabled: dom.settings.musicToggle.checked, volume: dom.settings.volumeSlider.value };
+            localStorage.setItem('pom2_settings', JSON.stringify(settings));
+            localStorage.setItem('pom2_chats', JSON.stringify(allChats));
+        }
+
+        function loadState() {
+            const savedSettings = JSON.parse(localStorage.getItem('pom2_settings') || '{}');
+            const savedChats = JSON.parse(localStorage.getItem('pom2_chats') || '{}');
+            userProfile = savedSettings.profile || { name: "Usuario", pic: "" };
+            dom.settings.userName.value = userProfile.name;
+            dom.settings.userPic.value = userProfile.pic;
+            dom.settings.picPreview.src = userProfile.pic || DEFAULT_USER_PIC;
+            dom.settings.apiKey.value = savedSettings.apiKey || '';
+            dom.settings.musicToggle.checked = savedSettings.musicEnabled || false;
+            dom.settings.volumeSlider.value = savedSettings.volume || 0.5;
+            backgroundMusic.volume = savedSettings.volume || 0.5;
+
+            let loadedChats = {};
+            for (const botId of Object.keys(PERMANENT_BOTS)) {
+                loadedChats[botId] = { ...PERMANENT_BOTS[botId], type: 'permanent', messages: (savedChats[botId] && savedChats[botId].messages) || [] };
+            }
+            for (const chatId in savedChats) {
+                if (!PERMANENT_BOTS[chatId]) { loadedChats[chatId] = savedChats[chatId]; }
+            }
+            allChats = loadedChats;
+            
+            renderChatList();
+            const firstChatId = Object.keys(allChats)[0];
+            if (firstChatId) switchChat(firstChatId);
+        }
+
+        // --- LÓGICA DE CHAT ---
+        function createNewChat() {
+            const chatId = 'gemini-' + Date.now();
+            let chatCount = 1;
+            for (const key in allChats) { if (key.startsWith('gemini-')) { chatCount++; } }
+            allChats[chatId] = { ...DEFAULT_GEMINI_CHAT, name: `${DEFAULT_GEMINI_CHAT.name} ${chatCount}`, type: 'general', messages: [] };
+            renderChatList();
+            switchChat(chatId);
+            saveState();
+        }
+
+        function clearCurrentChat() {
+            if (!activeChatId) return;
+            if (confirm(`¿Limpiar la conversación con ${allChats[activeChatId].name}?`)) {
+                allChats[activeChatId].messages = [];
+                saveState();
+                renderMessages();
+            }
+        }
+
+        function deleteCurrentChat() {
+            if (!activeChatId || allChats[activeChatId].type === 'permanent') return;
+            if (confirm(`¿Borrar el chat ${allChats[activeChatId].name}?`)) {
+                delete allChats[activeChatId];
+                const firstChatId = Object.keys(allChats)[0];
+                activeChatId = null;
+                saveState();
+                renderChatList();
+                if (firstChatId) switchChat(firstChatId);
+            }
+        }
+
+        function switchChat(chatId) {
+            activeChatId = chatId;
+            const isPermanent = allChats[chatId].type === 'permanent';
+            dom.chat.deleteChatBtn.disabled = isPermanent;
+            renderChatList();
+            renderMessages();
+            dom.chat.input.disabled = false;
+            dom.chat.input.placeholder = `Escribe un mensaje a ${allChats[chatId].name}...`;
+            dom.chat.input.focus();
+        }
+
+        async function addUserMessage(text) {
+            if (!activeChatId || isAwaitingResponse) return;
+            const message = { role: 'user', parts: [{ text }] };
+            allChats[activeChatId].messages.push(message);
+            renderMessages();
+            saveState();
+            await getGeminiResponse();
+        }
+
+        function addBotMessage(text) {
+            const message = { role: 'model', parts: [{ text }] };
+            allChats[activeChatId].messages.push(message);
+            renderMessages();
+            saveState();
+        }
+
+        // --- IMPLEMENTACIÓN DE LA API DE GEMINI ---
+        async function getGeminiResponse() {
+            const apiKey = dom.settings.apiKey.value;
+            if (!apiKey) {
+                addBotMessage("Error: Por favor, introduce tu API Key en la configuración.");
+                return;
+            }
+
+            const currentChat = allChats[activeChatId];
+            let history = [...currentChat.messages];
+
+            // Añadir el prompt de sistema si es un bot permanente
+            if (currentChat.type === 'permanent' && currentChat.prompt) {
+                // Gemini funciona mejor si el prompt es parte del historial
+                history.unshift({
+                    role: 'user',
+                    parts: [{ text: currentChat.prompt }]
+                }, {
+                    role: 'model',
+                    parts: [{ text: "Entendido. Estoy listo." }]
+                });
+            }
+
+            isAwaitingResponse = true;
+            showLoadingIndicator(true);
+
+            try {
+                const response = await fetch(API_URL + apiKey, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: history })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error.message || "Error en la solicitud a la API.");
+                }
+
+                const data = await response.json();
+                const botText = data.candidates[0]?.content?.parts[0]?.text;
+
+                if (botText) {
+                    addBotMessage(botText);
+                } else {
+                    addBotMessage("No he recibido una respuesta válida. Inténtalo de nuevo.");
+                }
+
+            } catch (error) {
+                console.error("Error fetching Gemini response:", error);
+                addBotMessage(`Error de conexión: ${error.message}`);
+            } finally {
+                isAwaitingResponse = false;
+                showLoadingIndicator(false);
+            }
+        }
+
+        // --- LÓGICA DE RENDERIZADO (UI) ---
+        function showLoadingIndicator(show) {
+            const existingIndicator = document.getElementById('loading-indicator');
+            if (existingIndicator) existingIndicator.remove();
+            if (show) {
+                const line = document.createElement('div');
+                line.id = 'loading-indicator';
+                line.className = 'message-line loading-indicator';
+                const currentChat = allChats[activeChatId];
+                line.innerHTML = `<img src="${currentChat.pic}" class="message-avatar" alt="Avatar"><strong class="message-sender" data-sender-type="bot">${currentChat.name}:</strong> <span>Escribiendo...</span>`;
+                dom.chat.messagesContainer.appendChild(line);
+                dom.chat.messagesContainer.scrollTop = dom.chat.messagesContainer.scrollHeight;
+            }
+        }
+
+        function renderChatList() {
+            dom.chat.listContainer.innerHTML = '';
+            for (const chatId in allChats) {
+                const chat = allChats[chatId];
+                const item = document.createElement('div');
+                item.className = 'chat-list-item';
+                if (chatId === activeChatId) item.classList.add('active');
+                item.innerHTML = `<img src="${chat.pic}" alt="Avatar"><span>${chat.name}</span>`;
+                item.addEventListener('click', () => switchChat(chatId));
+                dom.chat.listContainer.appendChild(item);
+            }
+        }
+
+        function renderMessages() {
+            dom.chat.messagesContainer.innerHTML = '';
+            if (!activeChatId || !allChats[activeChatId]) return;
+            const currentChat = allChats[activeChatId];
+            currentChat.messages.forEach(msg => {
+                if (!msg.parts || !msg.parts[0]) return; // Ignorar mensajes malformados
+                const isUser = msg.role === 'user';
+                const senderName = isUser ? userProfile.name : currentChat.name;
+                const senderPic = isUser ? (userProfile.pic || DEFAULT_USER_PIC) : currentChat.pic;
+                
+                const line = document.createElement('div');
+                line.className = 'message-line';
+                const textNode = document.createTextNode(msg.parts[0].text);
+                const textSpan = document.createElement('span');
+                textSpan.className = 'message-text';
+                textSpan.appendChild(textNode);
+                
+                line.innerHTML = `<img src="${senderPic}" class="message-avatar" alt="Avatar"><strong class="message-sender" data-sender-type="${isUser ? 'user' : 'bot'}">${senderName}:</strong>`;
+                line.appendChild(textSpan);
+                dom.chat.messagesContainer.appendChild(line);
+            });
+            dom.chat.messagesContainer.scrollTop = dom.chat.messagesContainer.scrollHeight;
+        }
+
+        // --- EVENT LISTENERS ---
+        dom.settings.userName.addEventListener('input', () => { userProfile.name = dom.settings.userName.value; saveState(); });
+        dom.settings.userPic.addEventListener('input', () => { userProfile.pic = dom.settings.userPic.value; dom.settings.picPreview.src = userProfile.pic || DEFAULT_USER_PIC; saveState(); });
+        dom.settings.apiKey.addEventListener('input', saveState);
+        dom.settings.musicToggle.addEventListener('change', () => { if (dom.settings.musicToggle.checked) backgroundMusic.play(); else backgroundMusic.pause(); saveState(); });
+        dom.settings.volumeSlider.addEventListener('input', () => { backgroundMusic.volume = dom.settings.volumeSlider.value; saveState(); });
+        dom.chat.newChatBtn.addEventListener('click', createNewChat);
+        dom.chat.clearChatBtn.addEventListener('click', clearCurrentChat);
+        dom.chat.deleteChatBtn.addEventListener('click', deleteCurrentChat);
+
+        dom.chat.input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (dom.chat.input.value.trim() !== '') {
+                    addUserMessage(dom.chat.input.value.trim());
+                    dom.chat.input.value = '';
+                }
+            }
+        });
+
+        document.getElementById('open-chat-btn').addEventListener('click', () => dom.chat.window.classList.toggle('hidden'));
+        document.getElementById('open-settings-btn').addEventListener('click', () => document.getElementById('settings-window').classList.toggle('hidden'));
+        document.querySelectorAll('.close-btn').forEach(btn => btn.addEventListener('click', (e) => e.target.closest('.window').classList.add('hidden')));
+
+        // --- INICIALIZACIÓN ---
+        function makeDraggable(windowEl) { const titleBar = windowEl.querySelector('.title-bar'); let isDragging = false, offsetX, offsetY; titleBar.addEventListener('mousedown', (e) => { isDragging = true; offsetX = e.clientX - windowEl.offsetLeft; offsetY = e.clientY - windowEl.offsetTop; e.preventDefault(); }); document.addEventListener('mousemove', (e) => { if (isDragging) { windowEl.style.left = `${e.clientX - offsetX}px`; windowEl.style.top = `${e.clientY - offsetY}px`; }}); document.addEventListener('mouseup', () => { isDragging = false; }); }
+        function updateClock() { document.getElementById('current-time').textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }); }
+        function handleFirstInteraction() { if (dom.settings.musicToggle.checked && backgroundMusic.paused) { backgroundMusic.play().catch(e => console.error("La reproducción de música fue bloqueada.", e)); } document.body.removeEventListener('click', handleFirstInteraction); document.body.removeEventListener('keydown', handleFirstInteraction); }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadState();
+            updateClock();
+            setInterval(updateClock, 1000);
+            makeDraggable(dom.chat.window);
+            makeDraggable(document.getElementById('settings-window'));
+            document.body.addEventListener('click', handleFirstInteraction);
+            document.body.addEventListener('keydown', handleFirstInteraction);
+        });
+    </script>
+</body>
+</html>
