@@ -61,49 +61,72 @@
         .taskbar-button svg { width: 24px; height: 24px; image-rendering: pixelated; }
         .clock { padding: 5px 10px; border-left: 2px solid #808080; border-top: 2px solid #808080; }
 
-  /* --- NUEVO: ESTILOS PARA VISTA MÓVIL --- */
+        /* --- ESTILOS PARA MÓVILES --- */
         @media (max-width: 768px) {
-            body { font-size: 14px; }
-            .main-container { padding: 5px; }
-
-            /* Hacer que las ventanas ocupen la pantalla */
-            .window {
-                width: 98vw !important;
-                height: 95vh !important;
-                top: 1vh !important;
-                left: 1vw !important;
+            .main-container {
+                padding: 0;
+                /* Dejamos espacio abajo para la barra de tareas fija */
+                padding-bottom: 45px; 
             }
 
-            /* Apilar el layout del chat verticalmente */
+            .taskbar {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                z-index: 50;
+            }
+
+            .window {
+                /* Las ventanas ocupan toda la pantalla */
+                top: 0 !important;
+                left: 0 !important;
+                width: 100%;
+                height: 100%;
+                box-sizing: border-box;
+                border: none;
+                box-shadow: none;
+            }
+
+            .window-content {
+                padding: 5px;
+            }
+
+            .title-bar {
+                cursor: default; /* No se puede arrastrar */
+            }
+
+            /* Adaptar layout del chat */
             .chat-content {
                 flex-direction: column;
             }
 
             .chat-sidebar {
                 width: 100%;
-                height: 150px; /* Altura fija para la lista de chats */
+                height: auto;
                 border-right: none;
                 border-bottom: 2px solid #000;
+                flex-direction: row; /* Ponemos los elementos en fila */
+                align-items: center;
             }
 
-            .sidebar-buttons {
-                display: flex; /* Poner botones en línea */
-                justify-content: space-around;
-            }
-            .sidebar-buttons button {
-                width: 32%;
-                margin-bottom: 0;
-            }
-            
-            .chat-messages {
-                height: auto; /* Dejar que ocupe el espacio restante */
+            .sidebar-header {
+                border-bottom: none;
+                border-right: 2px solid #000;
+                padding: 4px;
             }
 
-            .chat-input-area {
-                height: 100px; /* Reducir altura del área de texto */
+            .chat-list {
+                display: flex; /* Para que los items se pongan en fila */
+                overflow-x: auto; /* Scroll horizontal si no caben */
+                overflow-y: hidden;
             }
 
-
+            .chat-list-item {
+                border-bottom: none;
+                border-right: 1px solid #808080;
+                flex-shrink: 0;
+            }
         }
     </style>
 </head>
@@ -430,7 +453,46 @@
         document.querySelectorAll('.close-btn').forEach(btn => btn.addEventListener('click', (e) => e.target.closest('.window').classList.add('hidden')));
 
         // --- INICIALIZACIÓN ---
-        function makeDraggable(windowEl) { const titleBar = windowEl.querySelector('.title-bar'); let isDragging = false, offsetX, offsetY; titleBar.addEventListener('mousedown', (e) => { isDragging = true; offsetX = e.clientX - windowEl.offsetLeft; offsetY = e.clientY - windowEl.offsetTop; e.preventDefault(); }); document.addEventListener('mousemove', (e) => { if (isDragging) { windowEl.style.left = `${e.clientX - offsetX}px`; windowEl.style.top = `${e.clientY - offsetY}px`; }}); document.addEventListener('mouseup', () => { isDragging = false; }); }
+                function makeDraggable(windowEl) {
+            // Desactivar arrastre en pantallas pequeñas
+            if (window.innerWidth <= 768) {
+                return;
+            }
+
+            const titleBar = windowEl.querySelector('.title-bar');
+            let isDragging = false, offsetX, offsetY;
+
+            const startDrag = (e) => {
+                isDragging = true;
+                const clientX = e.clientX || e.touches[0].clientX;
+                const clientY = e.clientY || e.touches[0].clientY;
+                offsetX = clientX - windowEl.offsetLeft;
+                offsetY = clientY - windowEl.offsetTop;
+                e.preventDefault();
+            };
+
+            const doDrag = (e) => {
+                if (isDragging) {
+                    const clientX = e.clientX || e.touches[0].clientX;
+                    const clientY = e.clientY || e.touches[0].clientY;
+                    windowEl.style.left = `${clientX - offsetX}px`;
+                    windowEl.style.top = `${clientY - offsetY}px`;
+                }
+            };
+
+            const stopDrag = () => {
+                isDragging = false;
+            };
+
+            titleBar.addEventListener('mousedown', startDrag);
+            document.addEventListener('mousemove', doDrag);
+            document.addEventListener('mouseup', stopDrag);
+            
+            // Soporte para eventos táctiles
+            titleBar.addEventListener('touchstart', startDrag);
+            document.addEventListener('touchmove', doDrag);
+            document.addEventListener('touchend', stopDrag);
+        }
         function updateClock() { document.getElementById('current-time').textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }); }
         function handleFirstInteraction() { if (dom.settings.musicToggle.checked && backgroundMusic.paused) { backgroundMusic.play().catch(e => console.error("La reproducción de música fue bloqueada.", e)); } document.body.removeEventListener('click', handleFirstInteraction); document.body.removeEventListener('keydown', handleFirstInteraction); }
 
