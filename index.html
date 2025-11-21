@@ -60,85 +60,51 @@
         .taskbar-button:active { border-color: #000 #fff #fff #000; }
         .taskbar-button svg { width: 24px; height: 24px; image-rendering: pixelated; }
         .clock { padding: 5px 10px; border-left: 2px solid #808080; border-top: 2px solid #808080; }
-		/* --- ESTILOS PARA VISTA MÓVIL --- */
-@media (max-width: 768px) {
-    body {
-        /* Evita que el usuario pueda hacer zoom y descolocar la interfaz */
-        touch-action: manipulation;
-    }
 
-    .main-container {
-        padding: 5px; /* Menos espacio en los bordes */
-    }
+  /* --- NUEVO: ESTILOS PARA VISTA MÓVIL --- */
+        @media (max-width: 768px) {
+            body { font-size: 14px; }
+            .main-container { padding: 5px; }
 
-    /* Forzar ventanas a ocupar toda la pantalla */
-    .window {
-        position: fixed; /* Lo fijamos a la vista del navegador */
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        box-sizing: border-box; /* Asegura que el padding no aumente el tamaño */
-        border: none;
-        box-shadow: none;
-    }
+            /* Hacer que las ventanas ocupen la pantalla */
+            .window {
+                width: 98vw !important;
+                height: 95vh !important;
+                top: 1vh !important;
+                left: 1vw !important;
+            }
 
-    .title-bar {
-        /* Hacemos que no se pueda arrastrar en móvil */
-        cursor: default;
-    }
+            /* Apilar el layout del chat verticalmente */
+            .chat-content {
+                flex-direction: column;
+            }
 
-    /* Reorganizar el layout del chat para que sea vertical */
-    .chat-content {
-        flex-direction: column;
-        padding: 5px;
-    }
+            .chat-sidebar {
+                width: 100%;
+                height: 150px; /* Altura fija para la lista de chats */
+                border-right: none;
+                border-bottom: 2px solid #000;
+            }
 
-    .chat-sidebar {
-        width: 100%; /* Ocupa todo el ancho */
-        height: auto; /* La altura se ajusta al contenido */
-        border-right: none;
-        border-bottom: 2px solid #000;
-        flex-shrink: 0; /* Evita que se encoja */
-    }
+            .sidebar-buttons {
+                display: flex; /* Poner botones en línea */
+                justify-content: space-around;
+            }
+            .sidebar-buttons button {
+                width: 32%;
+                margin-bottom: 0;
+            }
+            
+            .chat-messages {
+                height: auto; /* Dejar que ocupe el espacio restante */
+            }
 
-    .chat-list {
-        /* Permite ver la lista de bots de forma horizontal */
-        display: flex;
-        overflow-x: auto;
-        padding-bottom: 5px;
-    }
+            .chat-input-area {
+                height: 100px; /* Reducir altura del área de texto */
+            }
 
-    .chat-list-item {
-        border-bottom: none;
-        border-right: 1px solid #808080;
-        flex-shrink: 0; /* Evita que los items se encojan */
-    }
 
-    .chat-main {
-        height: 100%;
-    }
-
-    .chat-messages {
-        height: calc(100% - 120px); /* Ajustamos la altura para dejar espacio al input */
-    }
-
-    .chat-input-area {
-        height: 80px; /* Un tamaño fijo para el área de texto */
-    }
-
-    /* Ocultar la barra de tareas para dar más espacio */
-    .taskbar {
-        display: none;
-    }
-
-    /* Esconder botones de la barra de tareas que ahora no tienen sentido */
-    #open-chat-btn, #open-settings-btn {
-        /* En móvil, las ventanas se abren de otra forma (o mostramos una por defecto) */
-        /* Por simplicidad, asumimos que el chat es la vista principal */
-        /* y la configuración se superpone. Necesitaríamos JS para manejar esto mejor. */
-    }
-}
+        }
     </style>
 </head>
 <body>
